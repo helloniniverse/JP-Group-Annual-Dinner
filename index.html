@@ -2878,13 +2878,10 @@ let introAudioBlocked = false;
 let musicFadeTimer = null;
 let videoStartTimer = null;
 let videoPlaybackTimer = null;
-let videoRateFrame = null;
 let currentMusicVolume = 100;
 let musicUnavailable = false;
 const MUSIC_FADE_SECONDS = 1.2;
 const DOOR_COVER_DURATION_SECONDS = 2.9;
-const VIDEO_RATE_RAMP_START_SECONDS = 1;
-const VIDEO_RATE_RAMP_DURATION_SECONDS = 2;
 let effectsAudioContext = null;
 
 function playFxTone(startFrequency, endFrequency, duration, volume, type = "sine", delay = 0) {
@@ -3072,25 +3069,6 @@ function scheduleDoorVideoStart(delaySeconds) {
   videoStartTimer = window.setTimeout(startDoorVideo, delaySeconds * 1000);
 }
 
-function updateDoorVideoPlaybackRate() {
-  videoRateFrame = null;
-  if (!doorVideoStarted || finished || doorVideo.paused || doorVideo.ended) return;
-
-  const progress = Math.min(
-    1,
-    Math.max(0, (doorVideo.currentTime - VIDEO_RATE_RAMP_START_SECONDS) / VIDEO_RATE_RAMP_DURATION_SECONDS)
-  );
-  const easedProgress = progress * progress * (3 - 2 * progress);
-  doorVideo.playbackRate = 1 + easedProgress;
-  videoRateFrame = requestAnimationFrame(updateDoorVideoPlaybackRate);
-}
-
-function startDoorVideoPlaybackRateRamp() {
-  if (videoRateFrame === null) {
-    videoRateFrame = requestAnimationFrame(updateDoorVideoPlaybackRate);
-  }
-}
-
 function handleDoorVideoFailure(error) {
   if (finished) return;
   if (videoPlaybackTimer !== null) {
@@ -3126,7 +3104,6 @@ function startDoorVideo() {
     }
     opening.classList.add("playing");
     skipButton.style.display = "block";
-    startDoorVideoPlaybackRateRamp();
 
     if (!introAudioBlocked && musicPlayerReady && backgroundMusicPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
       fadeYouTubeVolume(0, MUSIC_FADE_SECONDS, () => {
@@ -3205,10 +3182,6 @@ function revealOrnamentalIntro() {
     clearTimeout(videoStartTimer);
     videoStartTimer = null;
   }
-  if (videoRateFrame !== null) {
-    cancelAnimationFrame(videoRateFrame);
-    videoRateFrame = null;
-  }
   doorVideo.playbackRate = 1;
   doorVideo.pause();
 
@@ -3263,7 +3236,6 @@ function beginDoorIntro() {
   scheduleDoorVideoStart(DOOR_COVER_DURATION_SECONDS);
 }
 
-doorVideo.addEventListener("playing", startDoorVideoPlaybackRateRamp);
 doorVideo.addEventListener("ended", () => {
   revealOrnamentalIntro();
   startBackgroundMusic();
