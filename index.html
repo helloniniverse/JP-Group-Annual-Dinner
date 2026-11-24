@@ -2944,7 +2944,7 @@ function createBackgroundMusicPlayer() {
   if (backgroundMusicPlayer || !window.YT || !window.YT.Player) return;
 
   const playerVars = {
-    autoplay: 0,
+    autoplay: 1,
     controls: 0,
     disablekb: 1,
     loop: 1,
@@ -2965,6 +2965,14 @@ function createBackgroundMusicPlayer() {
         iframe.title = "Background music player";
         iframe.tabIndex = -1;
         iframe.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
+        const allowedFeatures = new Set(
+          (iframe.getAttribute("allow") || "")
+            .split(";")
+            .map(feature => feature.trim())
+            .filter(Boolean)
+        );
+        allowedFeatures.add("autoplay");
+        iframe.setAttribute("allow", [...allowedFeatures].join("; "));
         musicPlayerReady = true;
         if (musicEnabled) {
           if (audioCrossfadeStarted) {
@@ -2984,6 +2992,7 @@ function createBackgroundMusicPlayer() {
         }
         if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) updateMusicToggle(false);
       },
+      onAutoplayBlocked: showYouTubeFallback,
       onError: showYouTubeFallback
     }
   });
@@ -3159,8 +3168,6 @@ function startDoorVideo() {
     onVideoStarted();
   }
 }
-
-loadYouTubeIframeAPI();
 
 document.querySelectorAll(".light-sweep").forEach((sweep) => {
   sweep.addEventListener("animationiteration", (event) => {
