@@ -140,7 +140,49 @@ button {
 
 .door-seal {
   z-index: 7;
-  animation: sealLight 8s ease-in-out infinite, sealTremble 5.2s linear infinite;
+  animation: sealLight 8s ease-in-out infinite, sealTremble 4.4s linear infinite;
+  transition: transform .25s ease-out;
+}
+
+.seal-open-button {
+  position: absolute;
+  left: 50%;
+  top: 52.7%;
+  z-index: 8;
+  display: grid;
+  width: min(20%, 360px);
+  aspect-ratio: 1;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #f4d28a;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.seal-open-button:focus-visible {
+  outline: 2px solid rgba(255, 226, 158, .9);
+  outline-offset: 6px;
+}
+
+.seal-open-prompt {
+  position: absolute;
+  top: calc(100% + clamp(6px, .8dvh, 12px));
+  left: 50%;
+  color: #f8dda0;
+  font: 500 clamp(11px, 1.15vw, 15px)/1.2 'Montserrat', sans-serif;
+  letter-spacing: .24em;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, .8), 0 0 12px rgba(255, 193, 72, .45);
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.seal-open-button:disabled {
+  cursor: default;
 }
 
 .light-sweep {
@@ -245,47 +287,67 @@ button {
   top: 52.7%;
   width: 24%;
   aspect-ratio: 1;
-  transform: translate(-50%, -50%) scale(.8);
   border-radius: 50%;
   z-index: 6;
-
-  opacity: .08;
   pointer-events: none;
-  animation: sealOrbFlicker 3.2s ease-in-out infinite;
-
-  background: radial-gradient(
-    circle,
-    rgba(255,233,160,.5) 0%,
-    rgba(255,195,70,.28) 28%,
-    rgba(255,165,40,.1) 52%,
-    transparent 75%
-  );
-
+  transform: translate(-50%, -50%);
   filter: blur(15px);
-
-  transition:
-    opacity .5s ease,
-    transform .6s ease;
 }
 
-@keyframes sealOrbFlicker {
-  0%, 100% { opacity: .08; transform: translate(-50%, -50%) scale(.8); }
-  10% { opacity: .2; transform: translate(-50%, -50%) scale(.88); }
-  14% { opacity: .1; transform: translate(-50%, -50%) scale(.82); }
-  19% { opacity: .26; transform: translate(-50%, -50%) scale(.92); }
-  24% { opacity: .08; transform: translate(-50%, -50%) scale(.8); }
-  43% { opacity: .16; transform: translate(-50%, -50%) scale(.85); }
-  48% { opacity: .035; transform: translate(-50%, -50%) scale(.76); }
-  54% { opacity: .08; transform: translate(-50%, -50%) scale(.8); }
-  67% { opacity: .22; transform: translate(-50%, -50%) scale(.9); }
-  72% { opacity: .07; transform: translate(-50%, -50%) scale(.79); }
-  88% { opacity: .18; transform: translate(-50%, -50%) scale(.86); }
-  93% { opacity: .08; transform: translate(-50%, -50%) scale(.8); }
+.seal-orb::before,
+.seal-orb::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle,
+    rgba(255,233,160,.65) 0%,
+    rgba(255,195,70,.38) 30%,
+    rgba(255,165,40,.14) 55%,
+    transparent 76%
+  );
+  content: "";
+}
+
+.seal-orb::before {
+  opacity: .12;
+  animation: sealOrbBreath 2s ease-in-out infinite alternate;
+}
+
+.seal-orb::after {
+  opacity: 0;
+  transform: scale(.88);
+  transition: opacity .45s ease, transform .45s ease;
+}
+
+@keyframes sealOrbBreath {
+  from {
+    opacity: .12;
+    transform: scale(.82);
+  }
+  to {
+    opacity: .28;
+    transform: scale(1.06);
+  }
+}
+
+#opening.seal-hovered .door-seal {
+  animation-name: sealLight;
+  transform: translate(0, 0) rotate(0);
+}
+
+#opening.seal-hovered .seal-orb::before {
+  animation-play-state: paused;
+}
+
+#opening.seal-hovered .seal-orb::after {
+  opacity: .3;
+  transform: scale(1.04);
 }
 
 /* CLICKABLE AREA */
 
-/* SOFTEN THE COVER BEFORE THE VIDEO BEGINS */
+/* OPENING TRANSITION AFTER THE SEAL IS TAPPED */
 
 #opening.preparing-video .door-stage {
   animation: doorCoverTremble 2.9s ease-in-out forwards;
@@ -328,7 +390,7 @@ button {
   .door-ribbon,
   .door-tails,
   .door-seal,
-  .seal-orb,
+  .seal-orb::before,
   #opening.preparing-video .door-stage {
     animation: none !important;
   }
@@ -637,10 +699,6 @@ button {
         line-height: 1.5;
     }
 
-    .skip-button {
-        right: 15px;
-        bottom: max(15px, env(safe-area-inset-bottom));
-    }
 }
 
 @media (max-height: 600px) and (orientation: landscape) {
@@ -2571,7 +2629,6 @@ button {
 
   <video
     id="doorVideo"
-    autoplay
     playsinline
     webkit-playsinline
     preload="auto"
@@ -2603,17 +2660,11 @@ button {
 
     <img class="door-layer door-seal"
          src="seal-overlay.png" alt="">
+    <button class="seal-open-button" id="sealOpenButton" type="button" aria-label="Tap to open the invitation and play the intro video">
+      <span class="seal-open-prompt" aria-hidden="true">TAP TO OPEN</span>
+    </button>
 
   </div>
-
-  <button
-    class="skip-button"
-    id="skipButton"
-    type="button"
-    style="display:none"
-  >
-    SKIP INTRO
-  </button>
 </section>
 
 
@@ -2857,13 +2908,12 @@ function resizeEventDetailsFrame() {
 eventDetailsFrame?.addEventListener("load", resizeEventDetailsFrame);
 const YOUTUBE_TRACK_URL = "https://youtu.be/Zs2tsPOb5eM?si=XEXsJnBwBLq5fN4c";
 const opening = document.getElementById("opening");
-const doorStage = document.getElementById("doorStage");
 const introScreen = document.getElementById("introScreen");
 const introNext = document.getElementById("introNext");
 const detailsScreen = document.getElementById("detailsScreen");
 const doorVideo = document.getElementById("doorVideo");
 const doorVideoSource = document.getElementById("doorVideoSource");
-const skipButton = document.getElementById("skipButton");
+const sealOpenButton = document.getElementById("sealOpenButton");
 const musicToggle = document.getElementById("musicToggle");
 const mobileVideoQuery = window.matchMedia("(max-width: 600px) and (orientation: portrait)");
 let started = false;
@@ -2873,15 +2923,9 @@ let backgroundMusicPlayer = null;
 let youtubeApiLoading = false;
 let musicPlayerReady = false;
 let musicEnabled = false;
-let audioCrossfadeStarted = false;
-let introAudioBlocked = false;
-let musicFadeTimer = null;
-let videoStartTimer = null;
 let videoPlaybackTimer = null;
 let currentMusicVolume = 100;
 let musicUnavailable = false;
-const MUSIC_FADE_SECONDS = 1.2;
-const DOOR_COVER_DURATION_SECONDS = 2.9;
 let effectsAudioContext = null;
 
 function playFxTone(startFrequency, endFrequency, duration, volume, type = "sine", delay = 0) {
@@ -2941,7 +2985,7 @@ function createBackgroundMusicPlayer() {
   if (backgroundMusicPlayer || !window.YT || !window.YT.Player) return;
 
   const playerVars = {
-    autoplay: 1,
+    autoplay: 0,
     controls: 0,
     disablekb: 1,
     loop: 1,
@@ -2971,17 +3015,7 @@ function createBackgroundMusicPlayer() {
         allowedFeatures.add("autoplay");
         iframe.setAttribute("allow", [...allowedFeatures].join("; "));
         musicPlayerReady = true;
-        if (musicEnabled) {
-          if (audioCrossfadeStarted) {
-            const remaining = doorVideo.duration - doorVideo.currentTime;
-            beginMusicCrossfade(Number.isFinite(remaining) && remaining > 0 ? remaining : 0.8);
-          } else {
-            backgroundMusicPlayer.unMute();
-            currentMusicVolume = 100;
-            backgroundMusicPlayer.setVolume(currentMusicVolume);
-            backgroundMusicPlayer.playVideo();
-          }
-        }
+        if (musicEnabled) startBackgroundMusic();
       },
       onStateChange(event) {
         if (event.data === YT.PlayerState.PLAYING) {
@@ -3011,46 +3045,6 @@ function loadYouTubeIframeAPI() {
   document.head.appendChild(script);
 }
 
-function fadeYouTubeVolume(targetVolume, durationSeconds, onComplete) {
-  if (!musicPlayerReady || !backgroundMusicPlayer) {
-    if (onComplete) onComplete();
-    return;
-  }
-  if (musicFadeTimer !== null) clearInterval(musicFadeTimer);
-
-  const startVolume = currentMusicVolume;
-  const endVolume = Math.max(0, Math.min(100, targetVolume));
-  const fadeDuration = Math.max(200, durationSeconds * 1000);
-  const fadeStartedAt = performance.now();
-  const updateVolume = () => {
-    const progress = Math.min(1, (performance.now() - fadeStartedAt) / fadeDuration);
-    currentMusicVolume = Math.round(startVolume + (endVolume - startVolume) * progress);
-    backgroundMusicPlayer.setVolume(currentMusicVolume);
-    if (progress === 1) {
-      clearInterval(musicFadeTimer);
-      musicFadeTimer = null;
-      if (onComplete) onComplete();
-    }
-  };
-  updateVolume();
-  musicFadeTimer = setInterval(updateVolume, 50);
-}
-
-function beginMusicCrossfade(durationSeconds) {
-  musicEnabled = true;
-  audioCrossfadeStarted = true;
-  if (!musicPlayerReady || !backgroundMusicPlayer) {
-    loadYouTubeIframeAPI();
-    return;
-  }
-  backgroundMusicPlayer.seekTo(0, true);
-  backgroundMusicPlayer.setVolume(0);
-  currentMusicVolume = 0;
-  backgroundMusicPlayer.unMute();
-  backgroundMusicPlayer.playVideo();
-  fadeYouTubeVolume(100, durationSeconds);
-}
-
 function startBackgroundMusic() {
   musicEnabled = true;
   if (!musicPlayerReady || !backgroundMusicPlayer) {
@@ -3063,14 +3057,8 @@ function startBackgroundMusic() {
   backgroundMusicPlayer.playVideo();
 }
 
-function scheduleDoorVideoStart(delaySeconds) {
-  if (doorVideoStarted || finished) return;
-  if (videoStartTimer !== null) return;
-  videoStartTimer = window.setTimeout(startDoorVideo, delaySeconds * 1000);
-}
-
 function handleDoorVideoFailure(error) {
-  if (finished) return;
+  if (!started || finished) return;
   if (videoPlaybackTimer !== null) {
     clearTimeout(videoPlaybackTimer);
     videoPlaybackTimer = null;
@@ -3083,10 +3071,10 @@ function handleDoorVideoFailure(error) {
     console.error("This browser cannot decode the intro video. Export it as an H.264 MP4 for broader support.");
   }
   revealOrnamentalIntro();
+  startBackgroundMusic();
 }
 
 function startDoorVideo() {
-  videoStartTimer = null;
   if (doorVideoStarted || finished) return;
   doorVideoStarted = true;
   doorVideo.muted = false;
@@ -3103,16 +3091,6 @@ function startDoorVideo() {
       videoPlaybackTimer = null;
     }
     opening.classList.add("playing");
-    skipButton.style.display = "block";
-
-    if (!introAudioBlocked && musicPlayerReady && backgroundMusicPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
-      fadeYouTubeVolume(0, MUSIC_FADE_SECONDS, () => {
-        musicEnabled = false;
-        backgroundMusicPlayer.pauseVideo();
-      });
-    } else if (!introAudioBlocked) {
-      musicEnabled = false;
-    }
   };
 
   const startMutedVideoFallback = (error) => {
@@ -3121,10 +3099,8 @@ function startDoorVideo() {
       return;
     }
 
-    introAudioBlocked = true;
     doorVideo.muted = true;
-    console.warn("Intro video audio autoplay was blocked; starting YouTube audio as a fallback.");
-    startBackgroundMusic();
+    console.warn("Intro video audio was blocked; retrying video playback muted.");
     const fallbackPlay = doorVideo.play();
     if (fallbackPlay && typeof fallbackPlay.then === "function") {
       fallbackPlay.then(onVideoStarted).catch(handleDoorVideoFailure);
@@ -3156,6 +3132,8 @@ document.querySelector(".door-seal").addEventListener("animationiteration", (eve
   if (event.animationName === "sealTremble") playSealWiggleFx();
 });
 
+loadYouTubeIframeAPI();
+
 function selectVideo() {
   if (started) return;
   const file = mobileVideoQuery.matches
@@ -3178,10 +3156,6 @@ function revealOrnamentalIntro() {
     clearTimeout(videoPlaybackTimer);
     videoPlaybackTimer = null;
   }
-  if (videoStartTimer !== null) {
-    clearTimeout(videoStartTimer);
-    videoStartTimer = null;
-  }
   doorVideo.playbackRate = 1;
   doorVideo.pause();
 
@@ -3200,8 +3174,6 @@ musicToggle.addEventListener("click", () => {
   }
   if (backgroundMusicPlayer && musicPlayerReady && backgroundMusicPlayer.getPlayerState() === YT.PlayerState.PLAYING && musicEnabled) {
     musicEnabled = false;
-    if (musicFadeTimer !== null) clearInterval(musicFadeTimer);
-    musicFadeTimer = null;
     backgroundMusicPlayer.pauseVideo();
     updateMusicToggle(false);
   } else {
@@ -3210,32 +3182,26 @@ musicToggle.addEventListener("click", () => {
 });
 
 function beginDoorIntro() {
-  if (started) return;
+  if (started || finished) return;
   started = true;
-  audioCrossfadeStarted = false;
-  introAudioBlocked = false;
+  opening.classList.remove("seal-hovered");
+  sealOpenButton.disabled = true;
   doorVideo.muted = false;
-  doorVideo.load();
   opening.classList.add("preparing-video");
-
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    startDoorVideo();
-    return;
-  }
-
-  const onCoverAnimationEnd = (event) => {
-    if (event.target !== doorStage || event.animationName !== "doorCoverTremble") return;
-    doorStage.removeEventListener("animationend", onCoverAnimationEnd);
-    if (videoStartTimer !== null) {
-      clearTimeout(videoStartTimer);
-      videoStartTimer = null;
-    }
-    startDoorVideo();
-  };
-  doorStage.addEventListener("animationend", onCoverAnimationEnd);
-  scheduleDoorVideoStart(DOOR_COVER_DURATION_SECONDS);
+  startDoorVideo();
 }
 
+sealOpenButton.addEventListener("pointerenter", (event) => {
+  if (event.pointerType === "mouse" && !started) {
+    opening.classList.add("seal-hovered");
+  }
+});
+sealOpenButton.addEventListener("pointerleave", (event) => {
+  if (event.pointerType === "mouse") {
+    opening.classList.remove("seal-hovered");
+  }
+});
+sealOpenButton.addEventListener("click", beginDoorIntro);
 doorVideo.addEventListener("ended", () => {
   revealOrnamentalIntro();
   startBackgroundMusic();
@@ -3243,9 +3209,6 @@ doorVideo.addEventListener("ended", () => {
 doorVideo.addEventListener("error", () => {
   handleDoorVideoFailure(doorVideo.error);
 });
-skipButton.addEventListener("click", revealOrnamentalIntro);
-beginDoorIntro();
-
 let invitationCountdownTimer = null;
 function startInvitationCountdown() {
   if (invitationCountdownTimer !== null) return;
