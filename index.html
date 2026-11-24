@@ -3259,7 +3259,7 @@ function beginDoorIntro() {
 doorVideo.addEventListener("playing", startDoorVideoPlaybackRateRamp);
 doorVideo.addEventListener("ended", () => {
   revealOrnamentalIntro();
-  if (!introAudioBlocked) startBackgroundMusic();
+  startBackgroundMusic();
 });
 doorVideo.addEventListener("error", () => {
   handleDoorVideoFailure(doorVideo.error);
